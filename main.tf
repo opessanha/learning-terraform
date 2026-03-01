@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 data "aws_ami" "app_ami" {
   most_recent = true
 
@@ -16,7 +20,7 @@ data "aws_ami" "app_ami" {
 
 resource "aws_instance" "web" {
   ami           = data.aws_ami.app_ami.id
-  instance_type = "t3.micro"
+  instance_type = "t3.micro"   # Free Tier elegível em us-east-1
 
   tags = {
     Name = "HelloWorld"
