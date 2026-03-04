@@ -94,6 +94,7 @@ launch_template = {
     traffic_source_attachments = (
      blog-alb = {
       traffic_source_identifier = aws_lb_target_group.blog.arn
-    )
+     )
+    }
   }
 }
