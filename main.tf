@@ -92,7 +92,10 @@ module "blog_autoscaling" {
   desired_capacity   = 1
   vpc_zone_identifier = module.blog_vpc.public_subnets
 
-  launch_template_id = aws_launch_template.blog.id
+  launch_template = {
+    id      = aws_launch_template.blog.id
+    version = "$Latest"
+  }
 
   traffic_source_attachments = {
     blog-alb = {
