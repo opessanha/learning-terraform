@@ -85,7 +85,7 @@ module "blog_autoscaling" {
 
   vpc_zone_identifier = module.blog_vpc.public_subnets
 }
-launch_template = {
+launch_template_name = {
     name = "blog"
     image_id      = data.aws_ami.app_ami.id
     instance_type = var.instance_type
