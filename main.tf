@@ -73,15 +73,7 @@ resource "aws_lb_target_group" "blog" {
   vpc_id   = module.blog_vpc.vpc_id
 }
 
-# Launch Template separado
-resource "aws_launch_template" "blog" {
-  name_prefix   = "blog-"
-  image_id      = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
-  vpc_security_group_ids = [module.blog_sg.security_group_id]
-}
-
-# Autoscaling referenciando o Launch Template
+# Autoscaling com parâmetros diretos
 module "blog_autoscaling" {
   source   = "terraform-aws-modules/autoscaling/aws"
   version  = "9.2.0"
@@ -92,10 +84,12 @@ module "blog_autoscaling" {
   desired_capacity   = 1
   vpc_zone_identifier = module.blog_vpc.public_subnets
 
-  launch_template = {
-    id      = aws_launch_template.blog.id
-    version = "$Latest"
-  }
+  # Parâmetros do Launch Template definidos aqui
+  launch_template_name = "blog"
+  update_default_version = true
+  image_id        = data.aws_ami.app_ami.id
+  instance_type   = var.instance_type
+  security_groups = [module.blog_sg.security_group_id]
 
   traffic_source_attachments = {
     blog-alb = {
