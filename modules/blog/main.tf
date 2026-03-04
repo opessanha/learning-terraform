@@ -32,11 +32,11 @@ module "blog_vpc" {
 }
 
 
-module "blog_autoscaling" {
+module "blog_autoscaling_v2" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "6.0.0"
 
-  name = "blog"
+  name = "blog-v2"
 
   min_size            = var.asg_min
   max_size            = var.asg_max
