@@ -22,9 +22,9 @@ module "blog_vpc" {
 
   azs             = ["sa-east-1a","sa-east-1b","sa-east-1c"]
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+
   tags = {
-   
-    Terraform = "true"
+    Terraform   = "true"
     Environment = "dev"
   }
 }
@@ -35,12 +35,12 @@ module "blog_sg" {
 
   vpc_id  = module.blog_vpc.vpc_id
   name    = "blog"
-  ingress_rules = ["https-443-tcp","http-80-tcp"]
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  egress_rules = ["all-all"]
-  egress_cidr_blocks = ["0.0.0.0/0"]
-}
 
+  ingress_rules       = ["https-443-tcp","http-80-tcp"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+  egress_rules        = ["all-all"]
+  egress_cidr_blocks  = ["0.0.0.0/0"]
+}
 
 module "blog_alb" {
   source = "terraform-aws-modules/alb/aws"
@@ -49,21 +49,21 @@ module "blog_alb" {
   vpc_id  = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
 
-security_groups = [module.blog_sg.security_group_id]
+  security_groups = [module.blog_sg.security_group_id]
 
   listeners = {
-  blog-http = {
+    blog-http = {
       port     = 80
       protocol = "HTTP"
       forward  = {
-       target_group_arn = aws_lb_target_group.blog.arn
+        target_group_arn = aws_lb_target_group.blog.arn
       }
-   }
+    }
   }
 
   tags = {
     Environment = "Dev"
-    }
+  }
 }
 
 resource "aws_lb_target_group" "blog" {
@@ -73,22 +73,26 @@ resource "aws_lb_target_group" "blog" {
   vpc_id   = module.blog_vpc.vpc_id
 }
 
+# Launch Template separado
+resource "aws_launch_template" "blog" {
+  name_prefix   = "blog-"
+  image_id      = data.aws_ami.app_ami.id
+  instance_type = var.instance_type
+  vpc_security_group_ids = [module.blog_sg.security_group_id]
+}
+
+# Autoscaling referenciando o Launch Template
 module "blog_autoscaling" {
   source   = "terraform-aws-modules/autoscaling/aws"
   version  = "9.2.0"
- 
+
   name               = "blog"
   min_size           = 1
   max_size           = 2
   desired_capacity   = 1
   vpc_zone_identifier = module.blog_vpc.public_subnets
 
-  launch_template = {
-    name            = "blog"
-    image_id        = data.aws_ami.app_ami.id
-    instance_type   = var.instance_type
-    security_groups = [module.blog_sg.security_group_id]
-  }
+  launch_template_id = aws_launch_template.blog.id
 
   traffic_source_attachments = {
     blog-alb = {
